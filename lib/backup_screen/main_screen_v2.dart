@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'quran_screen.dart';
-import 'settings_screen.dart';
-import 'about_screen.dart';
+import '../screens/quran_screen.dart';
+import '../screens/settings_screen.dart';
+import '../screens/about_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

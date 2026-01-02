@@ -24,7 +24,7 @@ class AboutScreen extends StatelessWidget {
                 style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF1B5E20)),
               ),
               const SizedBox(height: 5),
-              Text("Versi 1.0.0", style: GoogleFonts.inter(color: Colors.grey)),
+              Text("Versi 1.1.0", style: GoogleFonts.inter(color: Colors.grey)),
               const SizedBox(height: 30),
               Text(
                 "Aplikasi Al-Quran digital yang didesain minimalis untuk kenyamanan membaca. Dilengkapi dengan audio dari berbagai Qori pilihan.",

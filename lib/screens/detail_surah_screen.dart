@@ -341,7 +341,7 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
     );
   }
 
-  // --- BAGIAN YANG DIUBAH AGAR ADA EFEK KLIK (HOVER) ---
+  // --- WIDGET AYAT ITEM (DENGAN DUKUNGAN TOGGLE ARAB/LATIN/TERJEMAHAN) ---
   Widget _buildContinuousAyatItem(Ayat ayat, int index) {
     final settings = Provider.of<SettingsProvider>(context);
     final theme = Theme.of(context);
@@ -350,26 +350,22 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
     bool isPlaying = _playingAyatIndex == index;
     bool isBookmarked = _currentBookmarkAyat == ayat.nomorAyat;
 
-    // Gunakan Material widget sebagai parent agar warna background dan efek splash menyatu
     return Material(
-      // Warna background ditentukan di sini
       color: isPlaying 
           ? const Color(0xFF1B5E20).withOpacity(0.1) 
           : (isDark ? Colors.black : Colors.white),
       child: InkWell(
-        // Efek splash (riak air) saat diklik - Hijau Muda
         splashColor: const Color(0xFF1B5E20).withOpacity(0.1),
-        // Efek highlight (saat ditekan tahan)
         highlightColor: const Color(0xFF1B5E20).withOpacity(0.05),
         
         onTap: () => _showAyatOptionMenu(ayat, index), 
         
         child: Container(
-          // Hapus color di Container ini agar transparan dan efek InkWell terlihat
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // --- HEADER NOMOR AYAT ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -406,41 +402,48 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
               
               const SizedBox(height: 16),
               
-              Text(
-                ayat.teksArab,
-                textAlign: TextAlign.right,
-                style: GoogleFonts.amiri(
-                  fontSize: settings.arabicFontSize,
-                  height: 2.2,
-                  fontWeight: FontWeight.w500,
-                  color: theme.textTheme.bodyLarge?.color,
+              // --- TEKS ARAB (TOGGLE) ---
+              if (settings.isShowArabic) ...[
+                Text(
+                  ayat.teksArab,
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.amiri(
+                    fontSize: settings.arabicFontSize,
+                    height: 2.2,
+                    fontWeight: FontWeight.w500,
+                    color: theme.textTheme.bodyLarge?.color,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 16),
+              ],
               
-              const SizedBox(height: 16),
-              
-              Text(
-                ayat.teksLatin,
-                textAlign: TextAlign.left,
-                style: GoogleFonts.inter(
-                  fontSize: settings.latinFontSize,
-                  color: const Color(0xFF1B5E20),
-                  fontWeight: FontWeight.w500,
-                  height: 1.5,
+              // --- TEKS LATIN (TOGGLE) ---
+              if (settings.isShowLatin) ...[
+                Text(
+                  ayat.teksLatin,
+                  textAlign: TextAlign.left,
+                  style: GoogleFonts.inter(
+                    fontSize: settings.latinFontSize,
+                    color: const Color(0xFF1B5E20),
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 8),
+              ],
               
-              const SizedBox(height: 8),
-              
-              Text(
-                ayat.teksIndonesia,
-                textAlign: TextAlign.left,
-                style: GoogleFonts.inter(
-                  fontSize: settings.latinFontSize,
-                  color: isDark ? Colors.white70 : Colors.black54,
-                  height: 1.5,
+              // --- TEKS TERJEMAHAN (TOGGLE) ---
+              if (settings.isShowTranslation) ...[
+                Text(
+                  ayat.teksIndonesia,
+                  textAlign: TextAlign.left,
+                  style: GoogleFonts.inter(
+                    fontSize: settings.latinFontSize,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    height: 1.5,
+                  ),
                 ),
-              ),
+              ],
               
               const SizedBox(height: 10),
               Divider(color: Colors.grey.withOpacity(0.2), thickness: 1),

@@ -8,15 +8,22 @@ class SettingsProvider with ChangeNotifier {
   double _arabicLevel = defaultLevel;
   double _latinLevel = defaultLevel;
 
-  // --- QORI SELECTION (BARU) ---
-  String _selectedQoriIdentifier = 'Misyari-Rasyid-Al-Afasi'; 
+  // --- VIEW SETTINGS (BARU: FITUR TOGGLE) ---
+  bool _isShowArabic = true;
+  bool _isShowLatin = true;
+  bool _isShowTranslation = true;
 
-  // Daftar Qori: Nama Tampil -> ID API
+  // --- QORI SELECTION ---
+  String _selectedQoriIdentifier = 'Misyari-Rasyid-Al-Afasi';
+
+  // UPDATED: Daftar Lengkap 6 Qori sesuai gambar CDN
   final Map<String, String> availableQoris = {
     'Misyari Rasyid Al-Afasi': 'Misyari-Rasyid-Al-Afasi',
     'Abdullah Al-Juhany': 'Abdullah-Al-Juhany',
     'Abdul Muhsin Al-Qasim': 'Abdul-Muhsin-Al-Qasim',
     'Abdurrahman as-Sudais': 'Abdurrahman-as-Sudais',
+    'Ibrahim Al-Dossari': 'Ibrahim-Al-Dossari', // Baru
+    'Yasser Al-Dosari': 'Yasser-Al-Dosari',     // Baru
   };
 
   ThemeMode get themeMode => _themeMode;
@@ -24,6 +31,11 @@ class SettingsProvider with ChangeNotifier {
   double get arabicLevel => _arabicLevel;
   double get latinLevel => _latinLevel;
   String get selectedQoriIdentifier => _selectedQoriIdentifier;
+  
+  // Getters untuk Toggle View
+  bool get isShowArabic => _isShowArabic;
+  bool get isShowLatin => _isShowLatin;
+  bool get isShowTranslation => _isShowTranslation;
 
   double get arabicFontSize => 16.0 + (_arabicLevel * 4.0);
   double get latinFontSize => 10.0 + (_latinLevel * 2.0);
@@ -37,6 +49,28 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_dark_mode', isDark);
+  }
+
+  // --- FUNGSI TOGGLE VIEW (BARU) ---
+  void toggleShowArabic(bool value) async {
+    _isShowArabic = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('show_arabic', value);
+  }
+
+  void toggleShowLatin(bool value) async {
+    _isShowLatin = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('show_latin', value);
+  }
+
+  void toggleShowTranslation(bool value) async {
+    _isShowTranslation = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('show_translation', value);
   }
 
   void setArabicLevel(double level) async {
@@ -53,7 +87,6 @@ class SettingsProvider with ChangeNotifier {
     await prefs.setDouble('latin_level', level);
   }
 
-  // --- SET QORI ---
   void setQori(String identifier) async {
     _selectedQoriIdentifier = identifier;
     notifyListeners();
@@ -65,12 +98,21 @@ class SettingsProvider with ChangeNotifier {
     _arabicLevel = defaultLevel;
     _latinLevel = defaultLevel;
     _selectedQoriIdentifier = 'Misyari-Rasyid-Al-Afasi';
+    
+    // Reset Toggles ke Default (True)
+    _isShowArabic = true;
+    _isShowLatin = true;
+    _isShowTranslation = true;
+
     notifyListeners();
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('arabic_level', defaultLevel);
     await prefs.setDouble('latin_level', defaultLevel);
     await prefs.setString('qori_id', 'Misyari-Rasyid-Al-Afasi');
+    await prefs.setBool('show_arabic', true);
+    await prefs.setBool('show_latin', true);
+    await prefs.setBool('show_translation', true);
   }
 
   Future<void> _loadSettings() async {
@@ -81,6 +123,11 @@ class SettingsProvider with ChangeNotifier {
     _arabicLevel = prefs.getDouble('arabic_level') ?? defaultLevel;
     _latinLevel = prefs.getDouble('latin_level') ?? defaultLevel;
     _selectedQoriIdentifier = prefs.getString('qori_id') ?? 'Misyari-Rasyid-Al-Afasi';
+    
+    // Load Toggles
+    _isShowArabic = prefs.getBool('show_arabic') ?? true;
+    _isShowLatin = prefs.getBool('show_latin') ?? true;
+    _isShowTranslation = prefs.getBool('show_translation') ?? true;
     
     notifyListeners();
   }

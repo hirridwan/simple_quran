@@ -53,7 +53,7 @@ class SettingsProvider with ChangeNotifier {
     'en': {
       // Navigation & Title
       'settings': 'Settings',
-      'quran': 'Quran',
+      'quran': 'Al-Quran',
       'about': 'About',
       'language': 'Language',
       'choose_language': 'Choose Language',

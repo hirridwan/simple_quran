@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart'; 
+import '../providers/settings_provider.dart'; 
 import '../services/api_service.dart';
 import '../models/models.dart';
 import '../services/bookmark_service.dart';
+import '../models/surah_translation.dart'; // Import Kamus
 import 'detail_surah_screen.dart';
 
 class QuranScreen extends StatefulWidget {
@@ -16,15 +19,12 @@ class _QuranScreenState extends State<QuranScreen> {
   final ApiService api = ApiService();
   final BookmarkService bookmarkService = BookmarkService();
   
-  // --- STATE VARIABLES ---
   List<Surah> _allSurah = [];
   List<Surah> _filteredSurah = [];
   Map<String, dynamic>? _lastRead;
   
   bool _isLoading = true;
   bool _isError = false;
-  // Kita tidak perlu menampilkan _errorMessage mentah ke user
-  // String _errorMessage = ''; 
   
   final TextEditingController _searchController = TextEditingController();
 
@@ -41,12 +41,14 @@ class _QuranScreenState extends State<QuranScreen> {
   }
 
   Future<void> _loadData() async {
-    try {
+    if (_allSurah.isEmpty) {
       setState(() {
         _isLoading = true;
         _isError = false;
       });
+    }
 
+    try {
       final results = await Future.wait([
         api.getDaftarSurah(),
         bookmarkService.getLastRead(),
@@ -55,7 +57,9 @@ class _QuranScreenState extends State<QuranScreen> {
       if (mounted) {
         setState(() {
           _allSurah = results[0] as List<Surah>;
-          _filteredSurah = _allSurah; 
+          if (_searchController.text.isEmpty) {
+            _filteredSurah = _allSurah;
+          }
           _lastRead = results[1] as Map<String, dynamic>?;
           _isLoading = false;
         });
@@ -65,7 +69,6 @@ class _QuranScreenState extends State<QuranScreen> {
         setState(() {
           _isLoading = false;
           _isError = true;
-          // _errorMessage = e.toString(); // Disimpan untuk debug saja jika perlu
         });
       }
     }
@@ -101,6 +104,9 @@ class _QuranScreenState extends State<QuranScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final isEnglish = settings.languageCode == 'en';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Al-Quran'),
@@ -108,12 +114,10 @@ class _QuranScreenState extends State<QuranScreen> {
         backgroundColor: const Color(0xFF1B5E20), 
         foregroundColor: Colors.white,
         elevation: 0,
-        
         toolbarHeight: 80, 
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
         ),
-
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(80), 
           child: Padding(
@@ -123,7 +127,9 @@ class _QuranScreenState extends State<QuranScreen> {
               onChanged: _filterSurah,
               style: const TextStyle(color: Colors.black87),
               decoration: InputDecoration(
-                hintText: "Cari Surat (ex: Yasin, 36)...",
+                hintText: isEnglish 
+                    ? "Search Surah (ex: Yasin, 36)..." 
+                    : "Cari Surat (ex: Yasin, 36)...",
                 hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
                 prefixIcon: const Icon(Icons.search, color: Color(0xFF1B5E20)),
                 suffixIcon: _searchController.text.isNotEmpty 
@@ -149,16 +155,15 @@ class _QuranScreenState extends State<QuranScreen> {
         ),
       ),
       
-      body: _buildBody(),
+      body: _buildBody(settings, isEnglish),
     );
   }
 
-  Widget _buildBody() {
-    if (_isLoading) {
+  Widget _buildBody(SettingsProvider settings, bool isEnglish) {
+    if (_isLoading && _allSurah.isEmpty) {
       return const Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20)));
     }
 
-    // --- BAGIAN INI YANG DIPERBAIKI (TAMPILAN ERROR) ---
     if (_isError) {
       return Center(
         child: Padding(
@@ -166,44 +171,28 @@ class _QuranScreenState extends State<QuranScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Icon Error yang lebih halus
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade50, // Background merah sangat muda
+                  color: Colors.red.shade50,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.wifi_off_rounded, size: 50, color: Colors.red.shade400),
               ),
-              
               const SizedBox(height: 24),
-              
-              // Judul Error
               Text(
-                "Koneksi Diperlukan",
-                style: GoogleFonts.inter(
-                  fontSize: 18, 
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87
-                ),
+                isEnglish ? "Connection Required" : "Koneksi Diperlukan",
+                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
               ),
-              
               const SizedBox(height: 12),
-              
-              // Pesan Penjelasan yang Nyaman
               Text(
-                "Aplikasi perlu mengunduh data Al-Qur'an sekali saja di awal. Mohon aktifkan internet Anda, lalu coba lagi.",
+                isEnglish 
+                  ? "The app needs to download Quran data once. Please enable internet and try again."
+                  : "Aplikasi perlu mengunduh data Al-Qur'an sekali saja di awal. Mohon aktifkan internet Anda, lalu coba lagi.",
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  color: Colors.grey.shade600,
-                  fontSize: 14,
-                  height: 1.5,
-                ),
+                style: GoogleFonts.inter(color: Colors.grey.shade600, fontSize: 14, height: 1.5),
               ),
-              
               const SizedBox(height: 30),
-              
-              // Tombol Coba Lagi yang Lebar
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -211,18 +200,11 @@ class _QuranScreenState extends State<QuranScreen> {
                   onPressed: _loadData,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1B5E20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    elevation: 2,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                   ),
                   child: Text(
-                    "Coba Lagi", 
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16
-                    )
+                    isEnglish ? "Try Again" : "Coba Lagi", 
+                    style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
                   ),
                 ),
               )
@@ -231,7 +213,6 @@ class _QuranScreenState extends State<QuranScreen> {
         ),
       );
     }
-    // ----------------------------------------------------
 
     if (_filteredSurah.isEmpty) {
       return Center(
@@ -240,7 +221,10 @@ class _QuranScreenState extends State<QuranScreen> {
           children: [
             Icon(Icons.search_off, size: 60, color: Colors.grey.shade300),
             const SizedBox(height: 10),
-            Text("Surat tidak ditemukan", style: TextStyle(color: Colors.grey.shade600)),
+            Text(
+              isEnglish ? "Surah not found" : "Surat tidak ditemukan", 
+              style: TextStyle(color: Colors.grey.shade600)
+            ),
           ],
         ),
       );
@@ -257,17 +241,17 @@ class _QuranScreenState extends State<QuranScreen> {
         itemBuilder: (context, index) {
           if (_lastRead != null && _searchController.text.isEmpty) {
             if (index == 0) {
-              return _buildLastReadWidget();
+              return _buildLastReadWidget(isEnglish);
             }
-            return _buildSurahItem(_filteredSurah[index - 1]);
+            return _buildSurahItem(_filteredSurah[index - 1], settings, isEnglish);
           }
-          return _buildSurahItem(_filteredSurah[index]);
+          return _buildSurahItem(_filteredSurah[index], settings, isEnglish);
         },
       ),
     );
   }
 
-  Widget _buildLastReadWidget() {
+  Widget _buildLastReadWidget(bool isEnglish) {
     return InkWell(
       onTap: () async {
         try {
@@ -321,9 +305,9 @@ class _QuranScreenState extends State<QuranScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Terakhir Dibaca",
-                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                  Text(
+                    isEnglish ? "Last Read" : "Terakhir Dibaca",
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -331,7 +315,9 @@ class _QuranScreenState extends State<QuranScreen> {
                     style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   Text(
-                    "Ayat ${_lastRead!['ayat']}",
+                    isEnglish 
+                      ? "Ayah ${_lastRead!['ayat']}" 
+                      : "Ayat ${_lastRead!['ayat']}",
                     style: const TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                 ],
@@ -344,7 +330,7 @@ class _QuranScreenState extends State<QuranScreen> {
     );
   }
 
-  Widget _buildSurahItem(Surah surah) {
+  Widget _buildSurahItem(Surah surah, SettingsProvider settings, bool isEnglish) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Card(
@@ -369,6 +355,7 @@ class _QuranScreenState extends State<QuranScreen> {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
+                // Nomor Surat
                 Container(
                   width: 40, height: 40,
                   decoration: BoxDecoration(
@@ -382,15 +369,22 @@ class _QuranScreenState extends State<QuranScreen> {
                   ),
                 ),
                 const SizedBox(width: 16),
+                
+                // --- INFO UTAMA (Nama Latin & Meta) ---
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        surah.namaLatin,
-                        style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16, color: Theme.of(context).textTheme.bodyLarge?.color),
-                      ),
+                      // Nama Latin
+                      if (settings.isShowLatin)
+                        Text(
+                          surah.namaLatin,
+                          style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16, color: Theme.of(context).textTheme.bodyLarge?.color),
+                        ),
+                      
                       const SizedBox(height: 4),
+                      
+                      // Info Tempat & Jumlah Ayat
                       Row(
                         children: [
                           Text(surah.tempatTurun, style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w500)),
@@ -399,16 +393,24 @@ class _QuranScreenState extends State<QuranScreen> {
                             width: 4, height: 4,
                             decoration: BoxDecoration(color: Colors.grey[400], shape: BoxShape.circle),
                           ),
-                          Text("${surah.jumlahAyat} Ayat", style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                          Text(
+                            isEnglish 
+                              ? "${surah.jumlahAyat} Ayahs" 
+                              : "${surah.jumlahAyat} Ayat", 
+                            style: TextStyle(color: Colors.grey[600], fontSize: 12)
+                          ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                Text(
-                  surah.nama,
-                  style: GoogleFonts.amiri(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF1B5E20)),
-                ),
+
+                // --- INFO ARAB (Nama Surat) ---
+                if (settings.isShowArabic)
+                  Text(
+                    surah.nama,
+                    style: GoogleFonts.amiri(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF1B5E20)),
+                  ),
               ],
             ),
           ),

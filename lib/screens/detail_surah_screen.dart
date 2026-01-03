@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import '../models/models.dart';
 import '../services/bookmark_service.dart';
 import '../providers/settings_provider.dart';
+import '../models/surah_translation.dart'; // Import Kamus
 import 'tafsir_screen.dart';
 
 class DetailSurahScreen extends StatefulWidget {
@@ -71,6 +72,7 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
   }
 
   Future<void> _playAudio(String url, int index) async {
+    final isEnglish = Provider.of<SettingsProvider>(context, listen: false).languageCode == 'en';
     try {
       if (_playingAyatIndex == index) {
         await audioPlayer.stop();
@@ -87,7 +89,7 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
     } catch (e) {
       if(mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal memutar audio: $e")),
+          SnackBar(content: Text(isEnglish ? "Failed to play audio: $e" : "Gagal memutar audio: $e")),
         );
         setState(() {
           _isAudioLoading = false;
@@ -98,6 +100,8 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
   }
 
   Future<void> _saveBookmark(int ayatNum) async {
+    final isEnglish = Provider.of<SettingsProvider>(context, listen: false).languageCode == 'en';
+
     await bookmarkService.saveLastRead(
       widget.surah.nomor, 
       ayatNum, 
@@ -111,7 +115,11 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
       Navigator.pop(context); 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Ditandai: ${widget.surah.namaLatin} Ayat $ayatNum"),
+          content: Text(
+            isEnglish 
+              ? "Bookmarked: ${widget.surah.namaLatin} Ayah $ayatNum" 
+              : "Ditandai: ${widget.surah.namaLatin} Ayat $ayatNum"
+          ),
           backgroundColor: const Color(0xFF1B5E20),
           duration: const Duration(seconds: 1),
         ),
@@ -120,6 +128,14 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
   }
 
   void _showSurahInfo() {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final isEnglish = settings.languageCode == 'en';
+    
+    // AMBIL ARTI (TRANSLATED)
+    String translatedArti = isEnglish 
+        ? SurahTranslation.getArti(widget.surah.nomor, widget.surah.arti) 
+        : widget.surah.arti;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -161,7 +177,7 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
                     runSpacing: 8.0, 
                     children: [
                       Chip(
-                        label: Text(widget.surah.arti), 
+                        label: Text(translatedArti), // Pakai Arti Translated
                         backgroundColor: const Color(0xFFE8F5E9),
                         labelStyle: GoogleFonts.inter(color: const Color(0xFF1B5E20), fontSize: 12),
                         side: BorderSide.none,
@@ -173,7 +189,7 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
                         side: BorderSide.none,
                       ),
                       Chip(
-                        label: Text("${widget.surah.jumlahAyat} Ayat"), 
+                        label: Text(isEnglish ? "${widget.surah.jumlahAyat} Ayahs" : "${widget.surah.jumlahAyat} Ayat"), 
                         backgroundColor: const Color(0xFFE8F5E9),
                         labelStyle: GoogleFonts.inter(color: const Color(0xFF1B5E20), fontSize: 12),
                         side: BorderSide.none,
@@ -182,7 +198,10 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
                   ),
 
                   const SizedBox(height: 20),
-                  Text("Deskripsi", style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    isEnglish ? "Description" : "Deskripsi", 
+                    style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16)
+                  ),
                   const SizedBox(height: 8),
                   HtmlWidget(
                     widget.surah.deskripsi,
@@ -199,6 +218,8 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
 
   void _showAyatOptionMenu(Ayat ayat, int index) {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final isEnglish = settings.languageCode == 'en';
+    
     String qoriId = settings.selectedQoriIdentifier;
     String audioUrl = "https://cdn.equran.id/audio-partial/$qoriId/${widget.surah.nomor.toString().padLeft(3, '0')}${ayat.nomorAyat.toString().padLeft(3, '0')}.mp3";
     
@@ -214,7 +235,7 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                "Ayat ${ayat.nomorAyat}",
+                isEnglish ? "Ayah ${ayat.nomorAyat}" : "Ayat ${ayat.nomorAyat}",
                 style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
@@ -225,7 +246,10 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
                   isPlaying ? Icons.stop_circle_outlined : Icons.play_circle_outline, 
                   color: const Color(0xFF1B5E20), size: 28
                 ),
-                title: Text(isPlaying ? "Hentikan Audio" : "Putar Audio"),
+                title: Text(isPlaying 
+                  ? (isEnglish ? "Stop Audio" : "Hentikan Audio") 
+                  : (isEnglish ? "Play Audio" : "Putar Audio")
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _playAudio(audioUrl, index);
@@ -233,12 +257,12 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.bookmark_border, color: Color(0xFF1B5E20), size: 28),
-                title: const Text("Tandai Terakhir Baca"),
+                title: Text(isEnglish ? "Bookmark Last Read" : "Tandai Terakhir Baca"),
                 onTap: () => _saveBookmark(ayat.nomorAyat),
               ),
               ListTile(
                 leading: const Icon(Icons.description_outlined, color: Color(0xFF1B5E20), size: 28),
-                title: const Text("Lihat Tafsir Ayat Ini"),
+                title: Text(isEnglish ? "View Tafsir (This Ayah)" : "Lihat Tafsir Ayat Ini"),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -254,7 +278,7 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.library_books_outlined, color: Color(0xFF1B5E20), size: 28),
-                title: const Text("Lihat Tafsir Semua Ayat"),
+                title: Text(isEnglish ? "View All Tafsir" : "Lihat Tafsir Semua Ayat"),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -274,6 +298,14 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final isEnglish = settings.languageCode == 'en';
+    
+    // TRANSLATE ARTI DI HEADER
+    String translatedArti = isEnglish 
+        ? SurahTranslation.getArti(widget.surah.nomor, widget.surah.arti) 
+        : widget.surah.arti;
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -292,7 +324,9 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
               style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
             ),
             Text(
-              "${widget.surah.arti} • ${widget.surah.jumlahAyat} Ayat",
+              isEnglish 
+                ? "$translatedArti • ${widget.surah.jumlahAyat} Ayahs"
+                : "$translatedArti • ${widget.surah.jumlahAyat} Ayat",
               style: GoogleFonts.inter(fontSize: 12, color: Colors.white70),
             ),
           ],
@@ -301,7 +335,7 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
           IconButton(
             onPressed: _showSurahInfo,
             icon: const Icon(Icons.info_outline_rounded, color: Colors.white),
-            tooltip: "Info Surat",
+            tooltip: isEnglish ? "Surah Info" : "Info Surat",
           )
         ],
       ),
@@ -317,8 +351,14 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
                 children: [
                   const Icon(Icons.wifi_off_rounded, size: 60, color: Colors.grey),
                   const SizedBox(height: 10),
-                  Text("Gagal memuat data", style: GoogleFonts.inter()),
-                  TextButton(onPressed: _fetchData, child: const Text("Coba Lagi"))
+                  Text(
+                    isEnglish ? "Failed to load data" : "Gagal memuat data", 
+                    style: GoogleFonts.inter()
+                  ),
+                  TextButton(
+                    onPressed: _fetchData, 
+                    child: Text(isEnglish ? "Try Again" : "Coba Lagi")
+                  )
                 ],
               ),
             );
@@ -333,7 +373,7 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
             initialScrollIndex: widget.initialAyat != null ? (widget.initialAyat! - 1).clamp(0, ayatList.length - 1) : 0,
             itemBuilder: (context, index) {
               final ayat = ayatList[index];
-              return _buildContinuousAyatItem(ayat, index);
+              return _buildContinuousAyatItem(ayat, index, settings);
             },
           );
         },
@@ -341,9 +381,7 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
     );
   }
 
-  // --- WIDGET AYAT ITEM (DENGAN DUKUNGAN TOGGLE ARAB/LATIN/TERJEMAHAN) ---
-  Widget _buildContinuousAyatItem(Ayat ayat, int index) {
-    final settings = Provider.of<SettingsProvider>(context);
+  Widget _buildContinuousAyatItem(Ayat ayat, int index, SettingsProvider settings) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
@@ -365,7 +403,6 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // --- HEADER NOMOR AYAT ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -396,13 +433,12 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
                     ],
                   ),
                   if (_isAudioLoading && isPlaying)
-                     const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF1B5E20))),
+                      const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF1B5E20))),
                 ],
               ),
               
               const SizedBox(height: 16),
               
-              // --- TEKS ARAB (TOGGLE) ---
               if (settings.isShowArabic) ...[
                 Text(
                   ayat.teksArab,
@@ -417,7 +453,6 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
                 const SizedBox(height: 16),
               ],
               
-              // --- TEKS LATIN (TOGGLE) ---
               if (settings.isShowLatin) ...[
                 Text(
                   ayat.teksLatin,
@@ -432,7 +467,6 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
                 const SizedBox(height: 8),
               ],
               
-              // --- TEKS TERJEMAHAN (TOGGLE) ---
               if (settings.isShowTranslation) ...[
                 Text(
                   ayat.teksIndonesia,

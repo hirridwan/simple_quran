@@ -69,8 +69,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Pengaturan"),
+        // --- MENYAMAKAN UI DENGAN TAFSIR SCREEN ---
+        elevation: 0,
+        backgroundColor: const Color(0xFF1B5E20),
+        foregroundColor: Colors.white,
         centerTitle: true,
+        toolbarHeight: 80, // Tinggi disamakan
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+        ),
+        title: Text(
+          "Pengaturan",
+          style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        // ------------------------------------------
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -115,7 +127,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           
           const SizedBox(height: 20),
 
-          // --- 2. QORI SELECTION & PREVIEW (REVISI: LEBIH RINGKAS) ---
+          // --- 2. QORI SELECTION & PREVIEW ---
           Text("Pilih Qori", style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
           const SizedBox(height: 8),
           
@@ -127,7 +139,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  // Dropdown (Judul "Pilih Qori" dihapus agar lebih compact)
                   Expanded(
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
@@ -140,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             child: Text(
                               entry.key, 
                               style: GoogleFonts.inter(fontSize: 14),
-                              overflow: TextOverflow.ellipsis, // Jaga-jaga nama kepanjangan
+                              overflow: TextOverflow.ellipsis,
                             ),
                           );
                         }).toList(),
@@ -155,9 +166,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   
-                  // Tombol Preview
                   const SizedBox(width: 10),
-                  Container(width: 1, height: 30, color: Colors.grey.shade300), // Height dikurangi dikit
+                  Container(width: 1, height: 30, color: Colors.grey.shade300),
                   const SizedBox(width: 5),
                   
                   IconButton(
@@ -205,7 +215,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                   Row(
+                    Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text("Ukuran Arab", style: TextStyle(fontWeight: FontWeight.bold)),
@@ -239,7 +249,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                   Row(
+                    Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text("Ukuran Terjemahan", style: TextStyle(fontWeight: FontWeight.bold)),
@@ -252,7 +262,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     activeColor: const Color(0xFF1B5E20),
                     onChanged: (val) => settings.setLatinLevel(val),
                   ),
-                   Text(
+                    Text(
                     "Dengan nama Allah Yang Maha Pengasih lagi Maha Penyayang.",
                     style: GoogleFonts.inter(fontSize: settings.latinFontSize),
                   ),
@@ -263,14 +273,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 10),
           Center(
-             child: TextButton.icon(
-               onPressed: () {
-                 _previewPlayer.stop(); // Stop audio if playing
-                 settings.resetSettings();
-               },
-               icon: const Icon(Icons.refresh, color: Colors.red),
-               label: const Text("Reset Default", style: TextStyle(color: Colors.red)),
-             ),
+              child: TextButton.icon(
+                onPressed: () {
+                  _previewPlayer.stop(); 
+                  settings.resetSettings();
+                },
+                icon: const Icon(Icons.refresh, color: Colors.red),
+                label: const Text("Reset Default", style: TextStyle(color: Colors.red)),
+              ),
           )
         ],
       ),
@@ -286,7 +296,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
           Switch(
             value: value,
-            activeColor: const Color(0xFF1B5E20),
+            activeThumbColor: const Color(0xFF1B5E20),
             onChanged: onChanged,
           ),
         ],

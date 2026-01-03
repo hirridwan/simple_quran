@@ -8,8 +8,20 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Tentang"),
+        // --- MENYAMAKAN UI DENGAN TAFSIR SCREEN ---
+        elevation: 0,
+        backgroundColor: const Color(0xFF1B5E20),
+        foregroundColor: Colors.white,
         centerTitle: true,
+        toolbarHeight: 80, // Tinggi disamakan
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+        ),
+        title: Text(
+          "Tentang",
+          style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        // ------------------------------------------
       ),
       body: Center(
         child: Padding(

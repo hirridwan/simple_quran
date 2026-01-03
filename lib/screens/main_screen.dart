@@ -59,7 +59,7 @@ class _MainScreenState extends State<MainScreen> {
               index: 0,
               icon: Icons.settings_outlined,
               activeIcon: Icons.settings,
-              label: "Setting",
+              label: "Pengaturan",
             ),
 
             // 2. Al-Quran (Tengah)
@@ -75,7 +75,7 @@ class _MainScreenState extends State<MainScreen> {
               index: 2,
               icon: Icons.info_outline_rounded,
               activeIcon: Icons.info_rounded,
-              label: "About",
+              label: "Tentang",
             ),
           ],
         ),

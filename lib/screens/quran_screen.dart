@@ -5,7 +5,7 @@ import '../providers/settings_provider.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import '../services/bookmark_service.dart';
-import '../models/surah_translation.dart'; // Import Kamus
+//import '../models/surah_translation.dart'; // Import Kamus
 import 'detail_surah_screen.dart';
 
 class QuranScreen extends StatefulWidget {

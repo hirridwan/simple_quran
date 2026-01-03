@@ -1,27 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart'; // Import Provider
+import '../providers/settings_provider.dart'; // Import Settings Provider
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Panggil Provider
+    final settings = Provider.of<SettingsProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
-        // --- MENYAMAKAN UI DENGAN TAFSIR SCREEN ---
         elevation: 0,
         backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
         centerTitle: true,
-        toolbarHeight: 80, // Tinggi disamakan
+        toolbarHeight: 80, 
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
         ),
         title: Text(
-          "Tentang",
+          settings.getText('about'), // TEXT DINAMIS
           style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 20),
         ),
-        // ------------------------------------------
       ),
       body: Center(
         child: Padding(
@@ -36,10 +39,13 @@ class AboutScreen extends StatelessWidget {
                 style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF1B5E20)),
               ),
               const SizedBox(height: 5),
-              Text("Versi 1.1.0", style: GoogleFonts.inter(color: Colors.grey)),
+              Text(
+                "${settings.getText('version')} 1.2.0", // TEXT DINAMIS "Versi"
+                style: GoogleFonts.inter(color: Colors.grey)
+              ),
               const SizedBox(height: 30),
               Text(
-                "Aplikasi Al-Quran digital yang didesain minimalis untuk kenyamanan membaca. Dilengkapi dengan audio dari berbagai Qori pilihan.",
+                settings.getText('app_desc'), // TEXT DINAMIS DESKRIPSI
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(fontSize: 14, height: 1.5),
               ),

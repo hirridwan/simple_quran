@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart'; // Import Provider
+import '../providers/settings_provider.dart'; // Import Settings Provider
 import 'quran_screen.dart';
 import 'settings_screen.dart';
 import 'about_screen.dart';
@@ -28,6 +30,9 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Panggil Provider untuk akses bahasa
+    final settings = Provider.of<SettingsProvider>(context);
+    
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
 
@@ -37,7 +42,7 @@ class _MainScreenState extends State<MainScreen> {
         children: _pages,
       ),
       
-      // Custom Navigation Bar V3 (Revisi Stabil)
+      // Custom Navigation Bar V3
       bottomNavigationBar: Container(
         height: 80, 
         decoration: BoxDecoration(
@@ -59,7 +64,7 @@ class _MainScreenState extends State<MainScreen> {
               index: 0,
               icon: Icons.settings_outlined,
               activeIcon: Icons.settings,
-              label: "Pengaturan",
+              label: settings.getText('settings'), // TEXT DINAMIS
             ),
 
             // 2. Al-Quran (Tengah)
@@ -67,7 +72,7 @@ class _MainScreenState extends State<MainScreen> {
               index: 1,
               icon: Icons.menu_book_rounded,
               activeIcon: Icons.menu_book,
-              label: "Al-Quran",
+              label: settings.getText('quran'), // TEXT DINAMIS
             ),
 
             // 3. Tentang
@@ -75,7 +80,7 @@ class _MainScreenState extends State<MainScreen> {
               index: 2,
               icon: Icons.info_outline_rounded,
               activeIcon: Icons.info_rounded,
-              label: "Tentang",
+              label: settings.getText('about'), // TEXT DINAMIS
             ),
           ],
         ),
@@ -94,9 +99,8 @@ class _MainScreenState extends State<MainScreen> {
     return GestureDetector(
       onTap: () => _onItemTapped(index),
       behavior: HitTestBehavior.opaque,
-      // Gunakan SizedBox dengan lebar tetap agar tidak goyang
       child: SizedBox(
-        width: 80, // Lebar tetap untuk setiap item menu
+        width: 80, 
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -104,17 +108,14 @@ class _MainScreenState extends State<MainScreen> {
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
-              // Padding tetap agar ukuran container ikon konsisten
               width: 60, 
               height: 32,
               decoration: BoxDecoration(
-                // Warna Hijau Muda saat aktif, transparan saat tidak
                 color: isSelected ? const Color(0xFFE8F5E9) : Colors.transparent,
-                borderRadius: BorderRadius.circular(20), // Bentuk Kapsul
+                borderRadius: BorderRadius.circular(20), 
               ),
               child: Icon(
                 isSelected ? activeIcon : icon,
-                // Warna Hijau Tua saat aktif, Abu-abu saat mati
                 color: isSelected ? const Color(0xFF1B5E20) : Colors.grey,
                 size: 24,
               ),

@@ -56,6 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
+    
     final isDark = settings.isDarkMode;
     final cardColor = isDark ? Theme.of(context).cardColor : Colors.white;
     
@@ -69,66 +70,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        // --- MENYAMAKAN UI DENGAN TAFSIR SCREEN ---
         elevation: 0,
         backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
         centerTitle: true,
-        toolbarHeight: 80, // Tinggi disamakan
+        toolbarHeight: 80, 
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
         ),
         title: Text(
-          "Pengaturan",
+          settings.getText('settings'),
           style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 20),
         ),
-        // ------------------------------------------
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           
-          // --- 1. TEMA ---
+          // --- 1. PENGATURAN APLIKASI ---
+          Text(
+            settings.languageCode == 'id' ? "Pengaturan Aplikasi" : "App Settings", 
+            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)
+          ),
+          const SizedBox(height: 8),
+          
           Card(
             elevation: 0,
             color: cardColor,
             shape: cardShape,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), 
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      settings.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                      color: const Color(0xFF1B5E20),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Text(
-                    "Mode Gelap", 
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)
-                  ),
-                  const Spacer(),
-                  Switch(
-                    value: settings.isDarkMode,
-                    activeTrackColor: const Color(0xFF1B5E20).withOpacity(0.5),
-                    activeThumbColor: const Color(0xFF1B5E20),
-                    onChanged: (value) => settings.toggleTheme(value),
-                  ),
-                ],
-              ),
+            child: Column(
+              children: [
+                // Toggle Bahasa
+                _buildToggleItem(
+                  settings.languageCode == 'en' ? 'English' : 'Bahasa Indonesia', 
+                  settings.languageCode == 'en', 
+                  (val) {
+                    settings.setLanguage(val ? 'en' : 'id');
+                  }
+                ),
+
+                Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+
+                // Toggle Mode Gelap
+                _buildToggleItem(
+                  settings.getText('dark_mode'), 
+                  settings.isDarkMode, 
+                  (val) => settings.toggleTheme(val)
+                ),
+              ],
             ),
           ),
           
           const SizedBox(height: 20),
 
-          // --- 2. QORI SELECTION & PREVIEW ---
-          Text("Pilih Qori", style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
+          // --- 2. QORI SELECTION (UKURAN PAS) ---
+          Text(settings.getText('select_qori'), style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
           const SizedBox(height: 8),
           
           Card(
@@ -136,12 +132,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: cardColor,
             shape: cardShape,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              // REVISI: Padding 8 (Jalan tengah yang pas)
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   Expanded(
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
+                        isDense: true, // Tetap compact tapi tidak gepeng
                         isExpanded: true,
                         value: settings.selectedQoriIdentifier,
                         icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF1B5E20)),
@@ -167,19 +165,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   
                   const SizedBox(width: 10),
-                  Container(width: 1, height: 30, color: Colors.grey.shade300),
-                  const SizedBox(width: 5),
+                  Container(width: 1, height: 24, color: Colors.grey.shade300),
+                  const SizedBox(width: 5), 
                   
                   IconButton(
+                    // Hapus visualDensity compact agar area sentuh normal
                     onPressed: () => _playPreview(settings.selectedQoriIdentifier),
                     icon: _isLoadingPreview 
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                       : Icon(
                           _isPlayingPreview ? Icons.stop_circle : Icons.play_circle_fill,
                           color: const Color(0xFF1B5E20),
-                          size: 32,
+                          size: 30, // Ukuran pas 30
                         ),
-                    tooltip: "Preview Suara (Al-Fatihah)",
+                    tooltip: settings.getText('preview_voice'),
                   ),
                 ],
               ),
@@ -189,26 +188,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 20),
           
           // --- 3. TAMPILAN AYAT ---
-          Text("Tampilan Ayat", style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
+          Text(settings.getText('view_settings'), style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
           const SizedBox(height: 8),
           Card(
             elevation: 0, color: cardColor, shape: cardShape,
             child: Column(
               children: [
-                _buildToggleItem("Teks Arab", settings.isShowArabic, (val) => settings.toggleShowArabic(val)),
+                _buildToggleItem(settings.getText('arabic_text'), settings.isShowArabic, (val) => settings.toggleShowArabic(val)),
                 Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
-                _buildToggleItem("Teks Latin", settings.isShowLatin, (val) => settings.toggleShowLatin(val)),
+                _buildToggleItem(settings.getText('latin_text'), settings.isShowLatin, (val) => settings.toggleShowLatin(val)),
                 Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
-                _buildToggleItem("Terjemahan", settings.isShowTranslation, (val) => settings.toggleShowTranslation(val)),
+                _buildToggleItem(settings.getText('translation'), settings.isShowTranslation, (val) => settings.toggleShowTranslation(val)),
               ],
             ),
           ),
           
           const SizedBox(height: 20),
-          Text("Ukuran Teks", style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
+          Text(settings.getText('text_size'), style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
           const SizedBox(height: 8),
 
-          // --- 4. SLIDER FONT ARAB ---
+          // --- 4. SLIDER UKURAN ---
           Card(
             elevation: 0, color: cardColor, shape: cardShape,
             child: Padding(
@@ -218,7 +217,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Ukuran Arab", style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(settings.getText('arabic_size'), style: const TextStyle(fontWeight: FontWeight.bold)),
                       Text("Level ${settings.arabicLevel.round()}", style: const TextStyle(color: Color(0xFF1B5E20), fontWeight: FontWeight.bold)),
                     ],
                   ),
@@ -242,7 +241,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           
           const SizedBox(height: 10),
 
-          // --- 5. SLIDER FONT LATIN ---
           Card(
             elevation: 0, color: cardColor, shape: cardShape,
             child: Padding(
@@ -252,7 +250,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Ukuran Terjemahan", style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(settings.getText('translation_size'), style: const TextStyle(fontWeight: FontWeight.bold)),
                       Text("Level ${settings.latinLevel.round()}", style: const TextStyle(color: Color(0xFF1B5E20), fontWeight: FontWeight.bold)),
                     ],
                   ),
@@ -279,7 +277,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   settings.resetSettings();
                 },
                 icon: const Icon(Icons.refresh, color: Colors.red),
-                label: const Text("Reset Default", style: TextStyle(color: Colors.red)),
+                label: Text(settings.getText('reset_default'), style: const TextStyle(color: Colors.red)),
               ),
           )
         ],
@@ -296,6 +294,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
           Switch(
             value: value,
+            activeTrackColor: const Color(0xFF1B5E20).withOpacity(0.5),
             activeThumbColor: const Color(0xFF1B5E20),
             onChanged: onChanged,
           ),

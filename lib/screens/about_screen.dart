@@ -40,7 +40,7 @@ class AboutScreen extends StatelessWidget {
               ),
               const SizedBox(height: 5),
               Text(
-                "${settings.getText('version')} 1.2.0", // TEXT DINAMIS "Versi"
+                "${settings.getText('version')} 1.3.0", // TEXT DINAMIS "Versi"
                 style: GoogleFonts.inter(color: Colors.grey)
               ),
               const SizedBox(height: 30),
